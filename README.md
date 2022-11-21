@@ -1,4 +1,4 @@
-# trabalho sobre threads
+# Trabalho Sobre Threads
 
 A ideia era fazer por semaforo, mais não entendemos muito sobre, até tentamos mas não estava dando certo, e achamos essa solução, 
 onde apenas um pet irá comer por vez, dessa forma não haverá disputa entre cães e gatos.
