@@ -106,26 +106,14 @@ int main()
 
 
 
-/*class list
-{
-	private:
-		int count;
-		int kind;
-public: list() 
-{
-	count = 0;
-	kind = 0;
-}
-	int getCount() { return count; }
-	void addCount() { ++count; }
-	int getKind() { return kind; }
-	void setKind(int _kind) { kind = _kind; }
-	void decreaseCount() { --count; }
 
 
-};
-
-
+semaphore dogSemaphore = 1;
+semaphore catSemaphore = 1;
+int countCat = 0;
+int countDog = 0;
+std::mutex Catmtx;
+std::mutex Dogmtx;
 
 list list1;
 semaphore catSemaphore;
@@ -182,15 +170,23 @@ void cat(int const id)
 	while (true)
 	{
 		do_stuff(id, "cat", "playing");
-		if (1)
+		if (countCat < MAX_PETS)
 		{
-			mtx.lock();
-			Sleep(1000);
+			catSemaphore.acquire();
+
+			Catmtx.lock();
+			countCat++;
+			if (countCat == 1) dogSemaphore.acquire();
+			Catmtx.unlock();
 			
+			catSemaphore.release();
 			
 			do_stuff(id, "cat", "eating");
-			mtx.unlock();
 
+			Catmtx.lock();
+			countCat--;
+			if (countCat == 0) dogSemaphore.release();
+			Catmtx.unlock();
 	
 		}
 		
@@ -202,13 +198,23 @@ void dog(int const id)
 	while (true)
 	{
 		do_stuff(id, "dog", "playing");
-		if (1)
-		{
-			mtx.lock();
-			do_stuff(id, "dog", "eating");
-			mtx.unlock();
-
 		
+		if (countDog < MAX_PETS)
+		{
+			dogSemaphore.acquire();
+			Dogmtx.lock();
+			countDog++;
+			if (countDog == 1) catSemaphore.acquire();
+			Dogmtx.unlock();
+
+			dogSemaphore.release();
+
+			do_stuff(id, "dog", "eating");
+		
+			Dogmtx.lock();
+			countDog--;
+			if (countDog == 0) catSemaphore.release();
+			Dogmtx.unlock();
 		}
 	
 	}
