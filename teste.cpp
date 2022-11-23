@@ -35,7 +35,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <Windows.h>
 
 class semaphore
 {
@@ -110,8 +109,8 @@ int main()
 
 semaphore dogSemaphore = 1;
 semaphore catSemaphore = 1;
-int countCat = 0;
-int countDog = 0;
+int countRoom = 0;
+int kind = 0;
 std::mutex Catmtx;
 std::mutex Dogmtx;
 
@@ -120,23 +119,34 @@ void cat(int const id)
 {
 	while (true)
 	{
+		int mykind = 1;
+
 		do_stuff(id, "cat", "playing");
-		if (countCat < MAX_PETS)
-		{
+
+		if (countRoom < MAX_PETS)
+		{	
+			Catmtx.lock();
+			if (countRoom > 0 && kind == 2)
+				dogSemaphore.acquire();
+			Catmtx.unlock();
+
 			catSemaphore.acquire();
 
+
 			Catmtx.lock();
-			countCat++;
-			if (countCat == 1) dogSemaphore.acquire();
+			countRoom++;
+			printf("countC = %d\n", countRoom);
+			kind = mykind;
+			if (countRoom == 1) dogSemaphore.acquire();
 			Catmtx.unlock();
-			
+
 			catSemaphore.release();
-			
+
 			do_stuff(id, "cat", "eating");
 
 			Catmtx.lock();
-			countCat--;
-			if (countCat == 0) dogSemaphore.release();
+			countRoom--;
+			if (countRoom == 0) dogSemaphore.release();
 			Catmtx.unlock();
 	
 		}
@@ -148,26 +158,37 @@ void dog(int const id)
 {
 	while (true)
 	{
+		int mykind = 2;
 		do_stuff(id, "dog", "playing");
 		
-		if (countDog < MAX_PETS)
+
+		if (countRoom < MAX_PETS)
 		{
-			dogSemaphore.acquire();
 			Dogmtx.lock();
-			countDog++;
-			if (countDog == 1) catSemaphore.acquire();
+			if (countRoom > 0 && kind == 1)
+				catSemaphore.acquire();
+			Dogmtx.unlock();
+
+			dogSemaphore.acquire();
+
+
+			Dogmtx.lock();
+			printf("countD = %d\n", countRoom);
+			countRoom++;
+			kind = mykind;
+			if (countRoom == 1) catSemaphore.acquire();
 			Dogmtx.unlock();
 
 			dogSemaphore.release();
 
 			do_stuff(id, "dog", "eating");
-		
+
 			Dogmtx.lock();
-			countDog--;
-			if (countDog == 0) catSemaphore.release();
+			countRoom--;
+			if (countRoom == 0) catSemaphore.release();
 			Dogmtx.unlock();
 		}
-	
+
 	}
 }
 
